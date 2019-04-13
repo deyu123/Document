@@ -1,0 +1,14 @@
+1. 解压
+2. 把conf文件夹下配置文件改个名字
+    cp zoo_sample.cfg zoo.cfg
+3. 编辑zoo.cfg,配置datadir
+    dataDir=/opt/module/zookeeper-3.4.10/zkData
+4. 配置集群机器，每台机器分配一个不同的Serverid
+server.2=hadoop102:2888:3888
+server.3=hadoop103:2888:3888
+server.4=hadoop104:2888:3888
+    以上配置2，3，4就是Serverid
+5. 在zkData文件夹里新建一个myid文件，内容是本机的Serverid
+6. 配置Zookeeper的LogDIR：配置bin/zkEnv.sh文件
+    ZOO_LOG_DIR="."改为/opt/module/zookeeper-3.4.10/logs
+7. bin/zkServer.sh start
