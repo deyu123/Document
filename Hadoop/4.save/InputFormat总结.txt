@@ -1,9 +1,0 @@
-InputFormat                 1. 切片                   2.把切片打散成KV
-FileInputFormat             按文件->块大小            没有实现
-CombineTextIF               重写了切片规则            CombineFileRecordReader
-TextInputFormat             FIF的                     LineRecordReader
-KeyValueIF                  FIF的                     KeyValueLineRecordReader
-NLineInputFormat            重写：按行切              LineRecordReader
-自定义                      FIF的                     自定义RR
-
-Driver里设置InputFormat
