@@ -1,0 +1,60 @@
+#将mysql 中的表employees 导入到 HDFS
+bin/sqoop import \
+--connect jdbc:mysql://hadoop202:3306/company \
+--username root \
+--password 000000 \
+--table employees \
+--target-dir /user/company \
+--delete-target-dir \
+--num-mappers 2
+
+# 使用查询的方式导入HDFS, 使用query 必须指定 target-dir 
+bin/sqoop import \
+--connect jdbc:mysql://hadoop202:3306/company \
+--username root \
+--password 000000 \
+--query 'select * from employees where $CONDITIONS' \
+--target-dir /user/company1 \
+--delete-target-dir \
+--num-mappers 2 \
+--split-by employee_id
+
+# 使用查询的方式导入HIVE, 使用query 必须指定 target-dir  
+#查看如何创建表的
+#show create table employees_hive;
+
+bin/sqoop import \
+--connect jdbc:mysql://hadoop202:3306/company \
+--username root \
+--password 000000 \
+--query 'select * from employees where $CONDITIONS' \
+--target-dir /user/company1 \
+--delete-target-dir \
+--num-mappers 1 \
+--hive-import \
+--fields-terminated-by "\t" \
+--hive-table employees_hive
+
+# 使用查询的方式导入HBase, 使用query 必须指定 target-dir 
+bin/sqoop import \
+--connect jdbc:mysql://hadoop202:3306/company \
+--username root \
+--password 000000 \
+--query 'select * from employees where $CONDITIONS' \
+--target-dir /user/company1 \
+--delete-target-dir \
+--num-mappers 1 \
+--split-by employee_id \
+--column-family 'info' \
+--hbase-row-key 'employee_id' \
+--hbase-table 'hbase_company' \
+--fields-terminated-by "\t" 
+
+#将hive 中的数据导入到MySQL 中， 不会创建表，必须要先把表给创建好
+bin/sqoop import \
+--connect jdbc:mysql://hadoop202:3306/company \
+--username root \
+--password 000000 \
+
+
+
