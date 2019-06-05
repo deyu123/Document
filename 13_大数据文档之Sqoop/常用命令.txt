@@ -51,10 +51,14 @@ bin/sqoop import \
 --fields-terminated-by "\t" 
 
 #将hive 中的数据导入到MySQL 中， 不会创建表，必须要先把表给创建好
-bin/sqoop import \
+bin/sqoop export \
 --connect jdbc:mysql://hadoop202:3306/company \
 --username root \
 --password 000000 \
+--table employees \
+--num-mappers 1 \
+--export-dir /user/hive/warehouse/employees_hive \
+--input-fields-terminated-by "\t"
 
 
 

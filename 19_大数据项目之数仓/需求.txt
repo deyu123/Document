@@ -1,0 +1,240 @@
+﻿需求四：沉默用户数
+沉默用户：指的是只在安装当天启动过，且启动时间是在一周前
+
+日活表： dws_uv_detail_day
+
+1.t1 每个用户的登陆次数
+
+select
+    mid_id,
+    count(*) ct
+    max(dt) max_dt
+from
+    dws_uv_detail_day
+
+2.过滤次数为1且七天前的数据
+
+select 
+    mid_id
+from
+    () a1
+where ct = 1 and dt < date_sub("2019-02-11",7)
+
+
+
+
+
+需求五：本周回流用户数
+老用户中，上周未启动过应用，本周启动了应用的用户
+
+上周启动的，和本周join 
+join 不上的，
+周活表：dws_uv_detail_wk
+
+这周登陆 - (上周登陆 和这周都登陆的) - 这周和上周新增的 = 上周未启动 这周启动
+
+
+drop table if exists dws_user_Reflux;
+create external table dws_user_Reflux
+(
+    `mid_id` string COMMENT '设备唯一标识',
+    `user_id` string COMMENT '用户标识', 
+    `version_code` string COMMENT '程序版本号', 
+    `version_name` string COMMENT '程序版本名', 
+    `lang` string COMMENT '系统语言', 
+    `source` string COMMENT '渠道号', 
+    `os` string COMMENT '安卓系统版本', 
+    `area` string COMMENT '区域', 
+    `model` string COMMENT '手机型号', 
+    `brand` string COMMENT '手机品牌', 
+    `sdk_version` string COMMENT 'sdkVersion', 
+    `gmail` string COMMENT 'gmail', 
+    `height_width` string COMMENT '屏幕宽高',
+    `app_time` string COMMENT '客户端日志产生时的时间',
+    `network` string COMMENT '网络模式',
+    `lng` string COMMENT '经度',
+    `lat` string COMMENT '纬度',
+)  COMMENT '本周回流用户数'
+stored as parquet
+location '/warehouse/gmall/dws/dws_user_Reflux/';
+
+
+insert overwrite table dws_user_silence
+
+1.查询 本周活跃
+
+select  * 
+from 
+dws_uv_detail_wk
+where monday_date=date_add(next_day('2019-02-10','MO'),-7)
+and sunday_date<=date_add(next_day('2019-02-10','MO'),-1) 
+
+
+2.查询上周活跃的
+select  * 
+from 
+dws_uv_detail_wk
+where monday_date=date_add(next_day('2019-02-10','MO'),-14)
+and sunday_date<=date_add(next_day('2019-02-10','MO'),-8) 
+
+
+3. 去除新用户
+dws_new_mid_day  = null
+
+select * 
+from 
+dws_new_mid_day 
+where datediff(create_date, date_add(next_day('2019-02-10','MO'),-14)) < 0
+
+
+select *
+from (
+    select  * 
+    from 
+    dws_uv_detail_wk
+    where monday_date=date_add(next_day('2019-02-10','MO'),-7)
+    and sunday_date<=date_add(next_day('2019-02-10','MO'),-1) 
+) a1
+left join 
+(
+    select  * 
+    from 
+    dws_uv_detail_wk
+    where monday_date=date_add(next_day('2019-02-10','MO'),-14)
+    and sunday_date<=date_add(next_day('2019-02-10','MO'),-8)
+) a2 on a1.mid_id = a2.mid_id
+left join 
+(
+    select * 
+    from 
+    dws_new_mid_day 
+    where datediff(create_date, date_add(next_day('2019-02-10','MO'),-14)) < 0
+) a3
+on a1.mid_id = a3.mid_id
+where a2.mid_id = null and a3.mid_id = null;
+
+
+
+
+需求六：流失用户数
+流失用户：最近7天未登录我们称之为流失用户
+
+日活表：dws_uv_detail_day
+
+1.七天的丢失的用户 t1
+select 
+    mid_id
+from
+    dws_uv_detail_day
+group by mid_id
+having max(dt) < date_sub("2019-02-11",7)
+
+2.统计
+
+select 
+    count(*)
+from
+() t1
+
+
+需求七：最近连续3周活跃用户数
+最近3周连续活跃的用户：通常是周一对前3周的数据做统计，该数据一周计算一次
+
+1. 根据周活表统计三周的数据
+select 
+    mid_id
+from
+    dws_uv_detail_wk
+where dt >= date_add(next_day("2019-02-20",'MO'),-7 * 3)  and dt <= date_add(next_day("2019-02-20","MO") , -1)
+group by mid_id
+having count(*) =3 
+
+2. 统计个数
+select count(*)
+from 
+    ()t1
+
+
+需求八：最近七天内连续三天活跃用户数
+说明：最近7天内连续3天活跃用户数
+1.七天日活和 mid_id 分区后的时间
+select 
+    mid_id,
+    dt,
+    rank() over(partition by mid_id order by dt) rank
+from
+    dws_uv_detail_day
+where dt>= date_sub("2019-02-20",6) and dt<= "2019-02-20"
+
+2. 得到mid_id , 和重复的个数
+select
+    mid_id
+    date_sub(dt, rank) date_diff
+from
+    () t1
+
+
+3.求出大于三个的mid_id
+select 
+    mid_id
+from
+    () t2
+group by mid_id,date_diff
+having count(*)>=3
+
+
+4.统计个数
+select
+    count(*)
+from
+    () t3
+
+
+
+select 
+     '2019-02-20',
+     concat(date_add('2019-02-20',-6),'_','2019-02-20') dt,
+     count(*) 
+from 
+(
+    select mid_id
+    from 
+    (
+        select 
+            mid_id,
+            date_sub(dt,rank) date_diff
+        from 
+        (
+            select 
+                 mid_id,
+                 dt,
+                 rank() over(partition by mid_id order by dt) rank
+            from dws_uv_detail_day
+            where dt>=date_add('2019-02-20',-6) and dt<='2019-02-20'
+        )t1
+    )t2
+    group by mid_id,date_diff
+    having count(*)>=3
+)t3;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
