@@ -1,0 +1,29 @@
+ApplicationMaster
+
+    -- main
+    
+        -- new ApplicationMasterArguments(args)
+        
+        -- new ApplicationMaster
+        
+        -- applicationMaster.run
+        
+            -- runDriver(clustor)
+            
+                -- startUserApplication
+                
+                    -- loadClass
+                    
+                    -- mainMethod = getMethod
+                    
+                -- registerAM
+                
+                    -- runAllocatedContainers
+                    
+                        -- new ExecutorRunnable().run()
+                        
+                            -- prepareCommand
+                                
+                                -- command : /bin/java org.apache.spark.executor.CoarseGrainedExecutorBackend
+                
+            -- runExecutorLauncher(client)

@@ -1,0 +1,15 @@
+bin/spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--num-executors 2 \
+--master yarn \
+--deploy-mode cluster \
+./examples/jars/spark-examples_2.11-2.1.1.jar \
+100
+
+bin/spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--num-executors 2 \
+--master yarn \
+--deploy-mode client \
+./examples/jars/spark-examples_2.11-2.1.1.jar \
+100

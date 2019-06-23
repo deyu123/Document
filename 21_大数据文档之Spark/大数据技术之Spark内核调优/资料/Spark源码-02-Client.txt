@@ -1,0 +1,14 @@
+Client:
+
+// 创建Yarn客户端，用于和Yarn进行关联
+yarnClient = YarnClient.createYarnClient
+
+// 提交应用
+this.appId = submitApplication()
+
+// 提交过程中，封装指令字符串
+bin/java org.apache.spark.deploy.yarn.ApplicationMaster
+bin/java org.apache.spark.deploy.yarn.ExecutorLauncher
+
+// 将指令通过Yarn客户端发送给Yarn
+rmClient.submitApplication(request);

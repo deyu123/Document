@@ -1,0 +1,21 @@
+CoarseGrainedExecutorBackend ：消息通信体
+
+run(driverUrl, executorId, hostname, cores, appId, workerUrl, userClassPath)
+
+SparkEnv.createExecutorEnv
+
+env.rpcEnv.setupEndpoint("Executor", new CoarseGrainedExecutorBackend
+
+env.rpcEnv.setupEndpoint("WorkerWatcher", new WorkerWatcher(env.rpcEnv, url))
+
+env.rpcEnv.awaitTermination()
+
+NettyRpcEnv ：
+Dispatcher：
+NettyRpcEndpointRef:
+RpcEndpointAddress:
+EndpointData:
+Inbox：
+
+// 创建Executor计算对象，调度Task
+executor = new Executor

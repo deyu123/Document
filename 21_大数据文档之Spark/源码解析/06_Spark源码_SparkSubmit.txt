@@ -1,0 +1,71 @@
+SparkSubmit
+
+    -- main
+    
+        // 将命令行参数进行封装
+        -- new SparkSubmitArguments(args)
+        
+        -- submit
+        
+            // 准备提交的环境 : (childMainClass)
+            // childMainClass(Cluster) : org.apache.spark.deploy.yarn.Client
+            // childMainClass(CLIENT)  : SparkPI
+            -- prepareSubmitEnvironment
+            
+            -- doRunMain()
+                
+                // 运行主程序
+                -- runMain
+                
+                    // 获取指定名称的类
+                    -- mainClass = Utils.classForName(childMainClass)
+                    
+                    // 获取指定类的main方法
+                    -- mainClass.getMethod("main"
+                    
+                    // 反射调用指定类的main方法
+                    -- mainMethod.invoke
+                    
+Client
+
+    -- main
+    
+        -- new ClientArguments(argStrings)
+        
+        -- new Client
+        
+            // 建立和Yarn的客户端
+            -- yarnClient = YarnClient.createYarnClient
+        
+        -- client.run
+        
+            -- submitApplication
+            
+                -- createContainerLaunchContext
+                
+                    -- (clustor)command : /bin/java org.apache.spark.deploy.yarn.ApplicationMaster
+                    -- (client) command : /bin/java org.apache.spark.deploy.yarn.ExecutorLauncher
+                
+                -- createApplicationSubmissionContext
+            
+                -- yarnClient.submitApplication(appContext)
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+                    
+                    

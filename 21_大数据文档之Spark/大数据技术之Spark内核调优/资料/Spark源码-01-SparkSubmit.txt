@@ -1,0 +1,16 @@
+SparkSubmit :
+
+// 声明Main类
+childMainClass = "org.apache.spark.deploy.yarn.Client"
+
+// 调用主类
+runMain(childArgs, childClasspath, sysProps, childMainClass, args.verbose)
+
+// 反射加载类
+mainClass = Utils.classForName(childMainClass)
+
+// 反射获取类的main方法
+val mainMethod = mainClass.getMethod("main", new Array[String](0).getClass)
+
+// 调用指定类的main方法
+mainMethod.invoke(null, childArgs.toArray)

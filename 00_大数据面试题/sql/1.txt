@@ -1,0 +1,252 @@
+
+# 查询胡杨和杨柳所需要的能量
+select  low_carbon from plant_carbon where plant_name = '胡杨' t1
+select  low_carbon from plant_carbon where plant_name = '沙柳' t2
+
+# 统计10 月 1号， 累计 sum， 沙柳，前十，用户信息
+select user_id,sum(low_carbon) sum_low_carbon
+from user_low_carbon 
+where datediff(regexp_replace(data_dt,'/','-'), regexp_replace('2017/10/1','/','-')) < 0
+group by user_id order by sum_low_carbon desc limit 11 t3
+
+# 领取沙柳多少课 t4
+
+select 
+   t3.user_id, round((sum_low_carbon- t1.low_carbon) / t2.low_carbon )  as plant_coun  
+from (select  low_carbon from plant_carbon where plant_name = '胡杨') t1,
+ (select  low_carbon from plant_carbon where plant_name = '沙柳') t2,
+ (select user_id,sum(low_carbon) sum_low_carbon
+from user_low_carbon 
+where datediff(regexp_replace(data_dt,'/','-'), regexp_replace('2017/10/1','/','-')) < 0
+group by user_id order by sum_low_carbon desc limit 11) t3
+
+
+
+#比后一名多几颗 t5
+
+select 
+t4.user_id,t4.plant_count,lead(t4.plant_count) over(sort by plant_count desc) as lead_count
+
+from 
+(
+select 
+   t3.user_id, round((sum_low_carbon- t1.low_carbon) / t2.low_carbon )  as plant_count  
+from (select  low_carbon from plant_carbon where plant_name = '胡杨') t1,
+ (select  low_carbon from plant_carbon where plant_name = '沙柳') t2,
+ (select user_id,sum(low_carbon) sum_low_carbon
+from user_low_carbon 
+where datediff(regexp_replace(data_dt,'/','-'), regexp_replace('2017/10/1','/','-')) < 0
+group by user_id order by sum_low_carbon desc limit 11) t3
+) t4
+
+
+# 差值计算出结果
+select user_id,plant_count,lead_count, (t5.plant_count - t5.lead_count) as lessCount
+
+from 
+(
+    select 
+        t4.user_id,t4.plant_count,lead(t4.plant_count,1,0) over(sort by plant_count desc) as lead_count
+    from 
+    (
+        select 
+           t3.user_id, round((sum_low_carbon- t1.low_carbon) / t2.low_carbon )  as plant_count  
+        from (select  low_carbon from plant_carbon where plant_name = '胡杨') t1,
+         (select  low_carbon from plant_carbon where plant_name = '沙柳') t2,
+         (select user_id,sum(low_carbon) sum_low_carbon
+        from user_low_carbon 
+        where datediff(regexp_replace(data_dt,'/','-'), regexp_replace('2017/10/1','/','-')) < 0
+        group by user_id order by sum_low_carbon desc limit 11) t3
+        ) t4
+) t5
+
+
+第二题：
+2017 年 每天 每个人的低碳总数 高于100 的
+
+select user_id,data_dt, sum(low_carbon) sum_low_carbon
+from 
+    user_low_carbon
+    where substring(data_dt,1,4) = '2017'
+    group by user_id,data_dt
+    having sum_low_carbon >= 100 ; t1
+    
+
+将前两行后两行
+select user_id,data_dt,lag(data_dt,2,'1970-7-1') over(partition by user_id)  lag2, 
+    lag(data_dt,1,'1970-7-1') over(partition by user_id)  lag1, 
+    lead(data_dt,2,'1970-7-1') over(partition by user_id)  lead2,
+    lead(data_dt,1,'1970-7-1') over(partition by user_id)  lead1
+from 
+    (
+        select user_id,data_dt, sum(low_carbon) sum_low_carbon
+    from 
+        user_low_carbon
+        where substring(data_dt,1,4) = '2017'
+        group by user_id,data_dt
+        having sum_low_carbon >= 100 ) t1
+    
+求出差值
+
+select user_id,data_dt,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lag2,'/','-')) lag2_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lag1,'/','-')) lag1_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lead2,'/','-')) lead2_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lead1,'/','-')) lead1_count
+    from
+        (select user_id,data_dt,lag(data_dt,2,'1970-7-1') over(partition by user_id)  lag2, 
+    lag(data_dt,1,'1970-7-1') over(partition by user_id)  lag1, 
+    lead(data_dt,2,'1970-7-1') over(partition by user_id)  lead2,
+    lead(data_dt,1,'1970-7-1') over(partition by user_id)  lead1
+from 
+    (
+        select user_id,data_dt, sum(low_carbon) sum_low_carbon
+    from 
+        user_low_carbon
+        where substring(data_dt,1,4) = '2017'
+        group by user_id,data_dt
+        having sum_low_carbon >= 100 ) t1) t2;
+    
+统计连续的user_id
+
+
+select user_id,data_dt
+from
+(
+select user_id,data_dt,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lag2,'/','-')) lag2_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lag1,'/','-')) lag1_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lead2,'/','-')) lead2_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lead1,'/','-')) lead1_count
+    from
+        (select user_id,data_dt,lag(data_dt,2,'1970-7-1') over(partition by user_id)  lag2, 
+    lag(data_dt,1,'1970/7/1') over(partition by user_id)  lag1, 
+    lead(data_dt,2,'1970/7/1') over(partition by user_id)  lead2,
+    lead(data_dt,1,'1970/7/1') over(partition by user_id)  lead1
+from 
+    (
+        select user_id,data_dt, sum(low_carbon) sum_low_carbon
+    from 
+        user_low_carbon
+        where substring(data_dt,1,4) = '2017'
+        group by user_id,data_dt
+        having sum_low_carbon > 100 ) t1) t2
+) t3
+where (lag2_count = 2 and lag1_count = 1 ) OR (lag1_count = 1 and lead1_count = -1) or (lead1_count = -1 and lead2_count = -2)
+
+t4
+
+select t.user_id,t.data_dt,low_carbon
+
+from user_low_carbon t
+join 
+
+(select user_id,data_dt
+from
+(
+select user_id,data_dt,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lag2,'/','-')) lag2_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lag1,'/','-')) lag1_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lead2,'/','-')) lead2_count,
+        datediff(regexp_replace(data_dt,'/','-'), regexp_replace(lead1,'/','-')) lead1_count
+    from
+        (select user_id,data_dt,lag(data_dt,2,'1970-7-1') over(partition by user_id)  lag2, 
+    lag(data_dt,1,'1970-7-1') over(partition by user_id)  lag1, 
+    lead(data_dt,2,'1970-7-1') over(partition by user_id)  lead2,
+    lead(data_dt,1,'1970-7-1') over(partition by user_id)  lead1
+from 
+    (
+        select user_id,data_dt, sum(low_carbon) sum_low_carbon
+    from 
+        user_low_carbon
+        where substring(data_dt,1,4) = '2017'
+        group by user_id,data_dt
+        having sum_low_carbon > 100 ) t1) t2
+) t3
+where (lag2_count = 2 and lag1_count = 1 ) OR (lag1_count = 1 and lead1_count = -1) or (lead1_count = -1 and lead2_count = -2)) t4
+
+where  t4.user_id = t.user_id and t4.data_dt= t.data_dt
+
+
+
+# 第二种方法
+开窗函数：
+select user_id,data_dt, sum(low_carbon) sum_low_carbon,
+     row_number() over (partition by user_id order by data_dt) rn
+from 
+    user_low_carbon
+    where substring(data_dt,1,4) = '2017'
+    group by user_id,data_dt
+    having sum_low_carbon > 100; t1
+
+计算差值：
+select user_id,data_dt,sum_low_carbon, date_sub(regexp_replace(data_dt,"/","-"),rn) dateSub
+
+from 
+(select user_id,data_dt, sum(low_carbon) sum_low_carbon,
+     row_number() over (partition by user_id order by data_dt) rn
+from 
+    user_low_carbon
+    where substring(data_dt,1,4) = '2017'
+    group by user_id,data_dt
+    having sum_low_carbon >= 100) t1;t2
+
+求出连续的id
+select user_id,count(dateSub) countDateSub
+
+from (select user_id,data_dt,sum_low_carbon, date_sub(regexp_replace(data_dt,"/","-"),rn) dateSub
+from 
+(select user_id,data_dt, sum(low_carbon) sum_low_carbon,
+     row_number() over (partition by user_id order by data_dt) rn
+from 
+    user_low_carbon
+    where substring(data_dt,1,4) = '2017'
+    group by user_id,data_dt
+    having sum_low_carbon >= 100) t1) t2
+group by user_id,dateSub
+having countDateSub >= 3; t3
+
+求出连续的id
+
+select user_id,data_dt, count(*) over(partition by user_id order by dateSub) counts
+from (
+    select user_id,data_dt,sum_low_carbon, date_sub(regexp_replace(data_dt,"/","-"),rn) dateSub
+
+from 
+(select user_id,data_dt, sum(low_carbon) sum_low_carbon,
+     row_number() over (partition by user_id order by data_dt) rn
+from 
+    user_low_carbon
+    where substring(data_dt,1,4) = '2017'
+    group by user_id,data_dt
+    having sum_low_carbon >= 100) t1
+) 
+where count >= 3 t2;
+
+进行 join :
+
+select t.user_id,t.data_dt,t.low_carbon
+from user_low_carbon t
+join 
+(select user_id,data_dt, count(*) over(partition by user_id order by dateSub) counts
+from (
+    select user_id,data_dt,sum_low_carbon, date_sub(regexp_replace(data_dt,"/","-"),rn) dateSub
+
+from 
+(select user_id,data_dt, sum(low_carbon) sum_low_carbon,
+     row_number() over (partition by user_id order by data_dt) rn
+from 
+    user_low_carbon
+    where substring(data_dt,1,4) = '2017'
+    group by user_id,data_dt
+    having sum_low_carbon >= 100) t1
+) where count >= 3 t2)  t3
+
+where t.user_id = t3.user_id and t.data_dt = t3.data_dt
+
+
+
+
+
+
+

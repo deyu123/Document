@@ -1,0 +1,61 @@
+ApplicationMaster ：
+
+// 获取参数 --class : SparkCoreDemo
+userClass = value
+
+// 运行Driver
+// 创建SparkContext对象的类称之为Driver
+runDriver(securityMgr)
+
+userClassThread = startUserApplication()
+
+
+// 反射获取Driver类中的main方法
+val mainMethod = userClassLoader.loadClass(args.userClass)
+  .getMethod("main", classOf[Array[String]])
+
+// 创建用户Driver线程
+val userThread = new Thread
+// 启动Driver线程
+userThread.start
+// 执行drvier线程中执行main方法
+mainMethod.invoke(null, userArgs.toArray)
+
+// 等待userClassThread执行完毕
+userClassThread.join()
+
+// 注册ApplicationMaster
+registerAM(sc.getConf, rpcEnv, driverRef, sc.ui.map(_.appUIAddress).getOrElse(""),
+          securityMgr)
+
+// 分配资源
+allocator.allocateResources()
+
+// 运行分配的容器
+runAllocatedContainers(containersToUse)
+
+// 准备向NM发送的指令
+val commands = prepareCommand()
+
+bin/java org.apache.spark.executor.CoarseGrainedExecutorBackend
+
+
+
+
+
+
+
+
+
+
+
+
+
+          
+          
+          
+          
+          
+          
+          
+          
