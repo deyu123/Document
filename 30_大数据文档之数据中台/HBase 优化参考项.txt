@@ -1,0 +1,16 @@
+HBase 优化参考项：
+
+hbase.hregion.memstore.flush.size：memstore 单个 flush 到磁盘的阈值。
+hbase.hregion.percolumnfamilyflush.size.lower.bound：flush 整个 memstore 的值之前，判断是否有个别列族值大于该值，大于则 flush。如果没有，则整个 memstore 进行 flush。
+hbase.hregion.memstore.block.multiplier：超过 hbase.hregion.memstore.flush.size 几倍则停止写入，进行 flush。
+hbase.server.thread.wakefrequency：上一个属性的检查频次间隔，单位毫秒。
+hbase.regionserver.global.memstore.size：当前 RegionServer 中所有 memstore 中的值达到 hbase.regionserver.global.memstore.size.lower.limit 比例时，则进行强制刷新。
+hbase.hregion.memstore.mslab.enabled：开启 memstore 本地缓冲，降低 Full GC。
+hbase.hregion.max.filesize：单列族超过多少则 split。
+hbase.hregion.majorcompaction：关闭 StoreFile 大合并周期。
+hbase.hstore.flusher.count：memstore flush 并行度，要结合集群和业务情况设置。
+hbase.hstore.blockingStoreFiles：memstore flush 前判断 HStore 中的小文件是否超过该值，超过则阻塞 flush ，等待 compaction。
+hbase.hstore.blockingWaitTime：等待上一个属性工作完成的超时时间。
+hbase.bucketcache.size：建议开启，并不可超过 -XX:MaxDirectMemorySize 的值。
+hbase.bucketcache.ioengine：建议配置为 offheap。
+hbase.regionserver.optionalcacheflushinterval：建议：需根据数据写入频次量级计算出发 flush 的时间阈值。
